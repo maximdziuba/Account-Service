@@ -1,6 +1,277 @@
 type: edu
 custom_name: Security first!
 files:
+- name: src/account/service/PaymentService.java
+  visible: true
+  text: |
+    package account.service;
+
+    import account.dto.payment.PaymentResponse;
+    import account.model.User;
+
+    public interface PaymentService {
+
+        PaymentResponse getPayment(User user);
+    }
+  learner_created: true
+- name: src/account/model/User.java
+  visible: true
+  text: "package account.model;\n\nimport jakarta.persistence.*;\nimport org.springframework.security.core.GrantedAuthority;\n\
+    import org.springframework.security.core.userdetails.UserDetails;\n\nimport java.util.Collection;\n\
+    import java.util.Set;\n\n@Table(name=\"app_user\")\n@Entity\npublic class User\
+    \ implements UserDetails {\n    \n\n    @Id\n    @GeneratedValue(strategy = GenerationType.AUTO)\n\
+    \    private Long id;\n    \n    private String name;\n    private String lastname;\n\
+    \n    @Column(unique = true)\n    private String email;\n\n    private String\
+    \ password;\n\n    private Set<Role> roles;\n\n\n    public Long getId() {\n \
+    \       return id;\n    }\n\n    public void setId(Long id) {\n        this.id\
+    \ = id;\n    }\n\n    public String getName() {\n        return name;\n    }\n\
+    \n    public void setName(String name) {\n        this.name = name;\n    }\n\n\
+    \    public String getLastname() {\n        return lastname;\n    }\n\n    public\
+    \ void setLastname(String lastname) {\n        this.lastname = lastname;\n   \
+    \ }\n\n    public String getEmail() {\n        return email;\n    }\n\n    public\
+    \ void setEmail(String email) {\n        this.email = email;\n    }\n\n    @Override\n\
+    \    public Collection<? extends GrantedAuthority> getAuthorities() {\n      \
+    \  return roles;\n    }\n\n    public String getPassword() {\n        return password;\n\
+    \    }\n\n    @Override\n    public String getUsername() {\n        return email;\n\
+    \    }\n\n    @Override\n    public boolean isAccountNonExpired() {\n        return\
+    \ true;\n    }\n\n    @Override\n    public boolean isAccountNonLocked() {\n \
+    \       return true;\n    }\n\n    @Override\n    public boolean isCredentialsNonExpired()\
+    \ {\n        return true;\n    }\n\n    @Override\n    public boolean isEnabled()\
+    \ {\n        return true;\n    }\n\n    public void setPassword(String password)\
+    \ {\n        this.password = password;\n    }\n}\n"
+  learner_created: true
+- name: src/account/model/Role.java
+  visible: true
+  text: |
+    package account.model;
+
+    import org.springframework.security.core.GrantedAuthority;
+
+    public enum Role implements GrantedAuthority {
+        ROLE_USER;
+
+        @Override
+        public String getAuthority() {
+            return name();
+        }
+    }
+  learner_created: true
+- name: src/account/repository/UserRepository.java
+  visible: true
+  text: |
+    package account.repository;
+
+    import account.model.User;
+    import org.springframework.data.jpa.repository.JpaRepository;
+
+    import java.util.Optional;
+
+    public interface UserRepository extends JpaRepository<User, Long> {
+
+        Optional<User> findUserByEmailIgnoreCase(String email);
+    }
+  learner_created: true
+- name: src/account/configuration/SecurityConfiguration.java
+  visible: true
+  text: |
+    package account.configuration;
+
+    import account.security.RestAuthenticationEntryPoint;
+    import org.springframework.context.annotation.Bean;
+    import org.springframework.context.annotation.Configuration;
+    import org.springframework.http.HttpMethod;
+    import org.springframework.security.authentication.AuthenticationManager;
+    import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+    import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+    import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+    import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+    import org.springframework.security.config.http.SessionCreationPolicy;
+    import org.springframework.security.core.userdetails.UserDetailsService;
+    import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+    import org.springframework.security.crypto.password.PasswordEncoder;
+    import org.springframework.security.web.SecurityFilterChain;
+
+    @Configuration
+    @EnableWebSecurity
+    public class SecurityConfiguration {
+
+        private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+        private final UserDetailsService userDetailsService;
+
+        public SecurityConfiguration(RestAuthenticationEntryPoint restAuthenticationEntryPoint, UserDetailsService userDetailsService) {
+            this.restAuthenticationEntryPoint = restAuthenticationEntryPoint;
+            this.userDetailsService = userDetailsService;
+        }
+
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+            http.httpBasic()
+                    .authenticationEntryPoint(restAuthenticationEntryPoint)
+                    .and()
+                    .csrf().disable().headers().frameOptions().disable()
+                    .and()
+                    .authorizeHttpRequests()
+                    .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/actuator/shutdown").permitAll()
+                    .anyRequest().authenticated()
+                    .and()
+                    .authenticationProvider(daoAuthenticationProvider())
+                    .sessionManagement()
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+            return http.build();
+        }
+
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+            return authenticationConfiguration.getAuthenticationManager();
+        }
+
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+            return new BCryptPasswordEncoder();
+        }
+
+        @Bean
+        public DaoAuthenticationProvider daoAuthenticationProvider() {
+            var daoAuthenticationProvider = new DaoAuthenticationProvider();
+            daoAuthenticationProvider.setUserDetailsService(userDetailsService);
+            daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+            return daoAuthenticationProvider;
+        }
+    }
+  learner_created: true
+- name: src/account/exception/ExceptionBody.java
+  visible: true
+  text: |
+    package account.exception;
+
+    import java.time.LocalDateTime;
+
+    public record ExceptionBody(LocalDateTime timestamp,
+                                Integer status,
+                                String error,
+                                String message,
+                                String path) {
+    }
+  learner_created: true
+- name: src/account/security/RestAuthenticationEntryPoint.java
+  visible: true
+  text: |
+    package account.security;
+
+    import jakarta.servlet.ServletException;
+    import jakarta.servlet.http.HttpServletRequest;
+    import jakarta.servlet.http.HttpServletResponse;
+    import org.springframework.security.core.AuthenticationException;
+    import org.springframework.security.web.AuthenticationEntryPoint;
+    import org.springframework.stereotype.Component;
+
+    import java.io.IOException;
+
+    @Component
+    public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
+
+        @Override
+        public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
+        }
+    }
+  learner_created: true
+- name: src/account/dto/payment/PaymentResponse.java
+  visible: true
+  text: |
+    package account.dto.payment;
+
+    public record PaymentResponse(Long id,
+                                  String name,
+                                  String lastname,
+                                  String email) {
+    }
+  learner_created: true
+- name: src/account/mapper/UserMapper.java
+  visible: true
+  text: |
+    package account.mapper;
+
+    import account.dto.auth.AuthResponse;
+    import account.dto.payment.PaymentResponse;
+    import account.model.User;
+
+    public class UserMapper {
+
+        public static PaymentResponse entityToPaymentDto(User user) {
+            return new PaymentResponse(
+                    user.getId(),
+                    user.getName(),
+                    user.getLastname(),
+                    user.getEmail()
+            );
+        }
+
+        public static AuthResponse entityToDto(User user) {
+            return new AuthResponse(
+                    user.getId(),
+                    user.getName(),
+                    user.getLastname(),
+                    user.getEmail()
+            );
+        }
+    }
+  learner_created: true
+- name: src/account/service/impl/PaymentServiceImpl.java
+  visible: true
+  text: |
+    package account.service.impl;
+
+    import account.dto.payment.PaymentResponse;
+    import account.mapper.UserMapper;
+    import account.model.User;
+    import account.repository.UserRepository;
+    import account.service.PaymentService;
+    import org.springframework.stereotype.Service;
+
+    @Service
+    public class PaymentServiceImpl implements PaymentService {
+
+        @Override
+        public PaymentResponse getPayment(User user) {
+            var paymentDto = UserMapper.entityToPaymentDto(user);
+            return paymentDto;
+        }
+    }
+  learner_created: true
+- name: src/account/service/UserService.java
+  visible: true
+  text: |
+    package account.service;
+
+    import account.dto.auth.AuthRequest;
+    import account.dto.auth.AuthResponse;
+    import account.model.User;
+
+    import java.util.List;
+    import java.util.Optional;
+
+    public interface UserService {
+
+        AuthResponse saveUser(AuthRequest authRequest);
+
+        Optional<User> findByEmail(String email);
+
+        List<AuthResponse> findAll();
+    }
+  learner_created: true
+- name: src/account/dto/auth/AuthResponse.java
+  visible: true
+  text: |
+    package account.dto.auth;
+
+    public record AuthResponse(Long id,
+                               String name,
+                               String lastname,
+                               String email) {
+    }
+  learner_created: true
 - name: src/account/AccountServiceApplication.java
   visible: true
   text: |-
@@ -18,6 +289,242 @@ files:
 
     }
   learner_created: false
+- name: src/account/dto/password/ChangePasswordResponse.java
+  visible: true
+  learner_created: true
+- name: src/account/configuration/ApplicationConfiguration.java
+  visible: true
+  learner_created: true
+- name: src/account/exception/RegistrationException.java
+  visible: true
+  learner_created: true
+- name: src/account/exception/PasswordValidationException.java
+  visible: true
+  learner_created: true
+- name: src/account/controller/ControllerAdvice.java
+  visible: true
+  text: |
+    package account.controller;
+
+    import account.exception.ExceptionBody;
+    import account.exception.UserExistsException;
+    import account.model.User;
+    import jakarta.servlet.http.HttpServletRequest;
+    import org.springframework.http.HttpStatus;
+    import org.springframework.web.bind.MethodArgumentNotValidException;
+    import org.springframework.web.bind.annotation.ExceptionHandler;
+    import org.springframework.web.bind.annotation.ResponseStatus;
+    import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+    import java.time.LocalDateTime;
+
+    @RestControllerAdvice
+    public class ControllerAdvice {
+
+        @ExceptionHandler(UserExistsException.class)
+        @ResponseStatus(HttpStatus.BAD_REQUEST)
+        public ExceptionBody handleUserExistsException(UserExistsException e, HttpServletRequest request) {
+            return new ExceptionBody(
+                    LocalDateTime.now(),
+                    HttpStatus.BAD_REQUEST.value(),
+                    HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                    e.getMessage(),
+                    request.getRequestURI()
+            );
+        }
+
+        @ExceptionHandler(MethodArgumentNotValidException.class)
+        @ResponseStatus(HttpStatus.BAD_REQUEST)
+        public ExceptionBody handleMethodArgumentNotValidException(MethodArgumentNotValidException e, HttpServletRequest request) {
+            return new ExceptionBody(
+                    LocalDateTime.now(),
+                    HttpStatus.BAD_REQUEST.value(),
+                    HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                    e.getMessage(),
+                    request.getRequestURI()
+            );
+        }
+    }
+  learner_created: true
+- name: src/account/controller/PaymentController.java
+  visible: true
+  text: |
+    package account.controller;
+
+    import account.model.User;
+    import account.service.PaymentService;
+    import org.springframework.http.HttpStatus;
+    import org.springframework.http.ResponseEntity;
+    import org.springframework.security.core.annotation.AuthenticationPrincipal;
+    import org.springframework.web.bind.annotation.GetMapping;
+    import org.springframework.web.bind.annotation.RequestMapping;
+    import org.springframework.web.bind.annotation.RestController;
+
+    @RestController
+    @RequestMapping("/api/empl/payment")
+    public class PaymentController {
+
+        private final PaymentService paymentService;
+
+        public PaymentController(PaymentService paymentService) {
+            this.paymentService = paymentService;
+        }
+
+        @GetMapping
+        public ResponseEntity getPayment(@AuthenticationPrincipal User user) {
+            var paymentDto = paymentService.getPayment(user);
+            return new ResponseEntity(paymentDto, HttpStatus.OK);
+        }
+    }
+  learner_created: true
+- name: src/account/utils/MessageUtil.java
+  visible: true
+  learner_created: true
+- name: src/account/controller/AuthController.java
+  visible: true
+  text: |
+    package account.controller;
+
+    import account.dto.auth.AuthRequest;
+    import account.exception.ExceptionBody;
+    import account.exception.UserExistsException;
+    import account.service.UserService;
+    import jakarta.validation.Valid;
+    import org.springframework.http.HttpStatus;
+    import org.springframework.http.ResponseEntity;
+    import org.springframework.web.bind.annotation.*;
+
+    import java.time.LocalDateTime;
+
+    @RestController
+    @RequestMapping("/api/auth")
+    public class AuthController {
+
+        private final UserService userService;
+
+        public AuthController(UserService userService) {
+            this.userService = userService;
+        }
+
+        @PostMapping("/signup")
+        @ResponseStatus(HttpStatus.OK)
+        public ResponseEntity signUp(@Valid @RequestBody AuthRequest authRequest) {
+            if (userService.findByEmail(authRequest.email()).isPresent()) {
+    //            var exceptionBody = new ExceptionBody(
+    //                    LocalDateTime.now(),
+    //                    HttpStatus.BAD_REQUEST.value(),
+    //                    HttpStatus.BAD_REQUEST.getReasonPhrase(),
+    //                    "/api/auth/signup"
+    //            );
+    //            return new ResponseEntity<>(exceptionBody, HttpStatus.BAD_REQUEST);
+                throw new UserExistsException("User exist!");
+            }
+            return ResponseEntity.ok(userService.saveUser(authRequest));
+        }
+    }
+  learner_created: true
+- name: src/account/service/impl/UserServiceImpl.java
+  visible: true
+  text: |
+    package account.service.impl;
+
+    import account.dto.auth.AuthRequest;
+    import account.dto.auth.AuthResponse;
+    import account.exception.UserExistsException;
+    import account.mapper.UserMapper;
+    import account.model.User;
+    import account.repository.UserRepository;
+    import account.service.UserService;
+    import org.springframework.security.crypto.password.PasswordEncoder;
+    import org.springframework.stereotype.Service;
+    import org.springframework.transaction.annotation.Transactional;
+
+    import java.util.List;
+    import java.util.Optional;
+
+    @Service
+    public class UserServiceImpl implements UserService {
+
+        private final UserRepository userRepository;
+        private final PasswordEncoder passwordEncoder;
+
+        public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+            this.userRepository = userRepository;
+            this.passwordEncoder = passwordEncoder;
+        }
+
+        @Override
+        @Transactional
+        public AuthResponse saveUser(AuthRequest authRequest) {
+            var user = new User();
+            user.setEmail(authRequest.email());
+            user.setName(authRequest.name());
+            user.setLastname(authRequest.lastname());
+            user.setPassword(passwordEncoder.encode(authRequest.password()));
+            var saved = userRepository.save(user);
+            var response = new AuthResponse(saved.getId(), authRequest.name(), authRequest.lastname(), authRequest.email());
+            return response;
+        }
+
+        @Override
+        public Optional<User> findByEmail(String email) {
+            return userRepository.findUserByEmailIgnoreCase(email);
+        }
+
+        @Override
+        public List<AuthResponse> findAll() {
+            return userRepository.findAll().stream()
+                    .map(UserMapper::entityToDto)
+                    .toList();
+        }
+    }
+  learner_created: true
+- name: src/account/controller/AdminController.java
+  visible: true
+  text: |
+    package account.controller;
+
+    import account.dto.auth.AuthResponse;
+    import account.service.UserService;
+    import org.springframework.web.bind.annotation.GetMapping;
+    import org.springframework.web.bind.annotation.RequestMapping;
+    import org.springframework.web.bind.annotation.RestController;
+
+    import java.util.List;
+
+    @RestController
+    @RequestMapping("/api/admin")
+    public class AdminController {
+
+        private final UserService userService;
+
+        public AdminController(UserService userService) {
+            this.userService = userService;
+        }
+
+        @GetMapping("/user")
+        public List<AuthResponse> findAllUsers() {
+            return userService.findAll();
+        }
+    }
+  learner_created: true
+- name: src/account/dto/auth/AuthRequest.java
+  visible: true
+  text: |
+    package account.dto.auth;
+
+    import jakarta.validation.constraints.Email;
+    import jakarta.validation.constraints.NotEmpty;
+
+    public record AuthRequest(@NotEmpty String name,
+                              @NotEmpty String lastname,
+                              @NotEmpty @Email(regexp = "^.+@acme.com$") String email,
+                              @NotEmpty String password) {
+    }
+  learner_created: true
+- name: src/resources/messages.properties
+  visible: true
+  learner_created: true
 - name: src/resources/application.properties
   visible: true
   text: |-
@@ -530,6 +1037,60 @@ files:
       };
     }
   learner_created: false
+- name: src/account/dto/password/ChangePasswordRequest.java
+  visible: true
+  learner_created: true
+- name: src/account/exception/PasswordUpdateException.java
+  visible: true
+  learner_created: true
+- name: src/account/exception/UserExistsException.java
+  visible: true
+  text: |
+    package account.exception;
+
+    public class UserExistsException extends RuntimeException {
+        public UserExistsException(String message) {
+            super(message);
+        }
+    }
+  learner_created: true
+- name: src/account/service/impl/CustomUserDetailsService.java
+  visible: true
+  text: |
+    package account.service.impl;
+
+    import account.repository.UserRepository;
+    import org.springframework.security.core.userdetails.UserDetails;
+    import org.springframework.security.core.userdetails.UserDetailsService;
+    import org.springframework.security.core.userdetails.UsernameNotFoundException;
+    import org.springframework.stereotype.Service;
+
+    @Service
+    public class CustomUserDetailsService implements UserDetailsService {
+
+        private final UserRepository userRepository;
+
+        public CustomUserDetailsService(UserRepository userRepository) {
+            this.userRepository = userRepository;
+        }
+
+
+        @Override
+        public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+            var user = userRepository.findUserByEmailIgnoreCase(username).orElseThrow();
+            return user;
+        }
+    }
+  learner_created: true
+- name: src/account/utils/LeakedPasswords.java
+  visible: true
+  learner_created: true
+- name: service.db.mv.db
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/learn/step/16603#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Congratulations!
+  time: "Mon, 24 Jul 2023 20:09:11 UTC"
 record: -1

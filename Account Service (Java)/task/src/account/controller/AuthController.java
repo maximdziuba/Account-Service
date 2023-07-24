@@ -1,39 +1,51 @@
 package account.controller;
 
 import account.dto.auth.AuthRequest;
-import account.exception.ExceptionBody;
-import account.exception.UserExistsException;
+import account.dto.auth.AuthResponse;
+import account.dto.password.ChangePasswordRequest;
+import account.dto.password.ChangePasswordResponse;
+import account.exception.PasswordUpdateException;
+import account.model.User;
 import account.service.UserService;
+import account.utils.MessageUtil;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
+@Validated
 public class AuthController {
 
     private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
+    private final MessageUtil messageUtil;
 
-    public AuthController(UserService userService) {
+    public AuthController(UserService userService, PasswordEncoder passwordEncoder, MessageUtil messageUtil) {
         this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
+        this.messageUtil = messageUtil;
     }
 
     @PostMapping("/signup")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity signUp(@Valid @RequestBody AuthRequest authRequest) {
-        if (userService.findByEmail(authRequest.email()).isPresent()) {
-//            var exceptionBody = new ExceptionBody(
-//                    LocalDateTime.now(),
-//                    HttpStatus.BAD_REQUEST.value(),
-//                    HttpStatus.BAD_REQUEST.getReasonPhrase(),
-//                    "/api/auth/signup"
-//            );
-//            return new ResponseEntity<>(exceptionBody, HttpStatus.BAD_REQUEST);
-            throw new UserExistsException("User exist!");
-        }
-        return ResponseEntity.ok(userService.saveUser(authRequest));
+    public ResponseEntity<AuthResponse> signUp(@Valid @RequestBody AuthRequest authRequest) {
+        var response = userService.saveUser(authRequest);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/changepass")
+    public ResponseEntity<ChangePasswordResponse> changePassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest,
+                                                                 @AuthenticationPrincipal User user) {
+//        if (passwordEncoder.matches(changePasswordRequest.getPassword(), user.getPassword())) {
+//            throw new PasswordUpdateException(messageUtil.getMessageByCode("password.different"));
+//        }
+        var response = userService.changeUsersPassword(changePasswordRequest, user);
+        return ResponseEntity.ok(response);
     }
 }

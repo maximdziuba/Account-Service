@@ -3,7 +3,7 @@ hyperskill_project:
   ide_files: https://cogniterra.org/media/attachments/lesson/26066/additional_files.json
   is_template_based: false
   use_ide: true
-update_date: "Thu, 20 Jul 2023 18:39:53 UTC"
+update_date: "Mon, 24 Jul 2023 19:46:19 UTC"
 stages:
 - id: 1086
   step: 16601
@@ -13,7 +13,7 @@ stages:
   is_completed: true
 - id: 1088
   step: 16603
-  is_completed: false
+  is_completed: true
 - id: 1089
   step: 16604
   is_completed: false
@@ -94,12 +94,12 @@ topics:
     theory_id: 13611
   - title: HTTP messages
     theory_id: 6752
+  - title: REST
+    theory_id: 7834
   - title: Introduction to Spring Data
     theory_id: 16299
   - title: CRUD repositories
     theory_id: 18031
-  - title: REST
-    theory_id: 7834
   - title: Postman
     theory_id: 8512
   - title: Insecure Cryptographic Storage
@@ -123,7 +123,7 @@ topics:
   - title: Authentication
     theory_id: 31058
   - title: Authorization
-    theory_id: 15269
+    theory_id: 31611
   - title: Spring actuator
     theory_id: 27488
   - title: Computer programming
