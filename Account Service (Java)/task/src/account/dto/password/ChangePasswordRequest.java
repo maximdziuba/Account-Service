@@ -2,11 +2,13 @@ package account.dto.password;
 
 import account.utils.LeakedPasswords;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.validation.constraints.AssertFalse;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 //public record ChangePasswordRequest(
 ////        @Size(min = 12, message = "{newPassword.length}")  @NotNull(message = "{newPassword.null}") String newPassword) {
@@ -23,6 +25,9 @@ import jakarta.validation.constraints.Size;
 //    }
 //}
 
+@Getter @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class ChangePasswordRequest {
 
     @JsonProperty("new_password")
@@ -35,22 +40,8 @@ public class ChangePasswordRequest {
     }
 
     @AssertTrue(message = "Password length must be 12 chars minimum!")
-    public boolean hasValideLength() {
+    public boolean hasValidLength() {
         return this.password != null && this.password.length() >= 12;
     }
 
-    public ChangePasswordRequest(String password) {
-        this.password = password;
-    }
-
-    public ChangePasswordRequest() {
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 }

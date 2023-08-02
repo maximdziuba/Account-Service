@@ -261,7 +261,7 @@ files:
         List<AuthResponse> findAll();
     }
   learner_created: true
-- name: src/account/dto/auth/AuthResponse.java
+- name: src/account/dto/auth/UserResponse.java
   visible: true
   text: |
     package account.dto.auth;
@@ -508,7 +508,7 @@ files:
         }
     }
   learner_created: true
-- name: src/account/dto/auth/AuthRequest.java
+- name: src/account/dto/auth/UserRequest.java
   visible: true
   text: |
     package account.dto.auth;
@@ -1093,4 +1093,4 @@ status: Solved
 feedback:
   message: Congratulations!
   time: "Mon, 24 Jul 2023 20:09:11 UTC"
-record: -1
+record: 4

@@ -1,6 +1,7 @@
 package account.configuration;
 
 import account.security.RestAuthenticationEntryPoint;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,15 +18,11 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfiguration {
 
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
     private final UserDetailsService userDetailsService;
-
-    public SecurityConfiguration(RestAuthenticationEntryPoint restAuthenticationEntryPoint, UserDetailsService userDetailsService) {
-        this.restAuthenticationEntryPoint = restAuthenticationEntryPoint;
-        this.userDetailsService = userDetailsService;
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -37,6 +34,9 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests()
                 .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
                 .requestMatchers(HttpMethod.POST, "/actuator/shutdown").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/acct/payments").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/acct/payments").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/acct/payments").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .authenticationProvider(daoAuthenticationProvider())

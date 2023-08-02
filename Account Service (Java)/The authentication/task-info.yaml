@@ -560,7 +560,7 @@ files:
 - name: src/account/controller/PaymentController.java
   visible: true
   learner_created: true
-- name: src/account/dto/auth/AuthRequest.java
+- name: src/account/dto/auth/UserRequest.java
   visible: true
   text: |
     package account.dto;
@@ -574,7 +574,7 @@ files:
                               @NotEmpty String password) {
     }
   learner_created: true
-- name: src/account/dto/auth/AuthResponse.java
+- name: src/account/dto/auth/UserResponse.java
   visible: true
   text: |
     package account.dto;

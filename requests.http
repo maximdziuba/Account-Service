@@ -9,7 +9,7 @@ Content-Type: application/json
   "name": "Ivan",
   "lastname": "Ivanov",
   "email": "ivan@acme.com",
-  "password": "ivan"
+  "password": "ivanivanivan"
 }
 
 ###
@@ -41,4 +41,67 @@ Content-Type: application/json
 {
   "newPassword": "PasswordForNovember"
 }
+###
+POST http://localhost:28852/api/acct/payments
+Content-Type: application/json
 
+[
+  {
+    "employee": "JohnDoe@acme.com",
+    "period": "03-2022",
+    "salary": 100000
+  },
+  {
+    "employee": "ivan@acme.com",
+    "period": "02-2023",
+    "salary": 150000
+  },
+  {
+    "employee": "ivan@acme.com",
+    "period": "02-2023",
+    "salary": 1342
+  }
+]
+
+###
+GET http://localhost:28852/api/acct/payments
+
+###
+PUT http://localhost:28852/api/acct/payments
+Content-Type: application/json
+
+{
+  "employee": "JohnDoe@acme.com",
+  "period": "03-2023",
+  "salary": -10
+}
+
+###
+GET http://localhost:28852/api/empl/payment
+Authorization: Basic johndoe@acme.com oMoa3VvqnLxW
+
+###
+GET http://localhost:28852/api/empl/payment?period=13-2023
+Authorization: Basic ivan@acme.com ivanivanivan
+
+###
+POST http://localhost:28852/api/acct/payments
+Content-Type: application/json
+
+[
+  {
+    "employee": "johndoe@acme.com",
+    "period": "13-2021",
+    "salary": -1
+  }
+]
+
+###
+PUT http://localhost:28852/api/acct/payments
+Content-Type: application/json
+
+{
+  "employee": "johndoe@acme.com",
+  "period": "03-2022",
+  "salary": 77777
+}
